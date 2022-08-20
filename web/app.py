@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, send_from_directory
 import configparser
 import json
 import adafruit_led_animation
@@ -11,6 +11,11 @@ app = Flask(__name__)
 def button(number):
     print("Pressed number ", number)
     return redirect("/", code=302)
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                          'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():

@@ -7,25 +7,35 @@
     <meta name="theme-color" content="#212529"/>
     <title>Light Bar Controller</title>
     <link href="static/nes-core.css" rel="stylesheet" />
+    <style>
+    .nes-select, .nes-field {
+      margin-bottom: 2rem;
+    }
+    .hide {
+      display: none;
+    }
+    </style>
+    <script src="static/jquery.js"></script>
+    <script src="static/handlebars.js"></script>
   </head>
 
   <body>
     <div class="container" style="padding:8px">
       <h2>Light Bar Settings</h2>
       <form style="max-width:480px" method="post">
-        <div class="nes-field" style="margin-bottom:2rem">
+        <div class="nes-field">
           <label for="turn_on">Turn On At</label>
           <input type="time" name="turn_on" id="turn_on" required class="nes-input" value="{{ timers['TurnOn'] }}">
         </div>
-        <div class="nes-field" style="margin-bottom:2rem">
+        <div class="nes-field">
           <label for="turn_off">Turn Off At</label>
           <input type="time" name="turn_off" id="turn_off" required class="nes-input" value="{{ timers['TurnOff'] }}">
         </div>
-        <div class="nes-field" style="margin-bottom:2rem">
+        <div class="nes-field">
           <label for="auto_off">Auto-Off After Hours</label>
           <input type="number" name="auto_off" id="auto_off" required class="nes-input" value="{{ timers['AutoOff'] }}">
         </div>
-        <div class="nes-field" style="margin-bottom:2rem">
+        <div class="nes-field">
           <button type="submit" class="nes-btn is-primary">Save</button>
         </div>
       </form>
@@ -46,18 +56,185 @@
             <div>{{pattern}}</div>
           {% endfor %}
         </div>
-        <div class="nes-field" style="margin-bottom:2rem">
+        <div class="nes-field">
           <button type="button" class="nes-btn is-secondary add-more">Add More</button>
           <button type="submit" class="nes-btn is-primary">Save</button>
         </div>
       </form>
     </div>
+    <script id="entry-template" type="text/x-handlebars-template">
+      {% raw %}
+      <section class="nes-container with-title">
+        <h3 class="title">Pattern #{{number}}</h3>
+        <div class="item">
+          <label for="type_{{number}}">Type</label>
+          <div class="nes-select">
+            <select required="" id="type_{{number}}" class="pattern-type">
+              {{#select pattern}}
+                <option value="" disabled="">Select...</option>
+                <option value="blink">Blink</option>
+                <option value="chase">Chase</option>
+                <option value="colorcycle">Color Cycle</option>
+                <option value="comet">Comet</option>
+                <option value="pulse">Pulse</option>
+                <option value="sparkle">Pop</option>
+                <option value="mic-1">Microphone Spectrum 1</option>
+                <option value="mic-2">Microphone Spectrum 2</option>
+                <option value="rainbow">Unicorn Party 1</option>
+                <option value="rainbowchase">Unicorn Party 2</option>
+                <option value="rainbowcomet">Unicorn Party 3</option>
+                <option value="rainbowsparkle">Unicorn Party 4</option>
+              {{/select}}
+            </select>
+          </div>
+        </div>
+        <div class="item speed">
+          <label for="speed_{{number}}">Speed</label>
+          <div class="nes-select">
+            <select required="" id="speed_{{number}}">
+              <option value="slowest">Slowest</option>
+              <option value="slow">Slow</option>
+              <option value="normal" selected="">Normal</option>
+              <option value="fast">Fast</option>
+              <option value="fastest">Fastest</option>
+            </select>
+          </div>
+        </div>
+        <div class="item zones">
+          <label for="zones_{{number}}">Zones</label>
+          <div class="nes-select">
+            <select required="" id="zones_{{number}}">
+              <option value="all">All</option>
+              <option value="white-all">White (All at Once)</option>
+              <option value="white-toggle">White (Left Right Alternate)</option>
+              <option value="rwb-toggle" selected="">Red White Blue (Alternate)</option>
+              <option value="rb-toggle" selected="">Red Blue (Alternate)</option>
+              <option value="rb-all" selected="">Red Blue (All at Once)</option>
+            </select>
+          </div>
+        </div>
+        <div class="item color hide">
+          <label for="color_{{number}}">Color</label>
+          <div class="nes-field">
+            <input type="color" value="#ff0000" id="color_{{number}}">
+          </div>
+        </div>
+        <div class="item colors hide">
+          <label>Colors</label>
+          <div class="nes-field">
+            <div class="default">
+              If no colors are selected, <b>rainbow colors</b> will be shown.
+            </div>
+            <div>
+              <input type="color" value="#ff0000">
+              <button type="button" class="nes-btn is-secondary add-more">-</button>
+              <button type="button" class="nes-btn is-secondary add-more">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="item bounce hide">
+          <label for="bounce_{{number}}">Bounce</label>
+          <label>
+            <input type="radio" class="nes-radio" name="answer" checked="">
+            <span>Yes</span>
+          </label>
+          <label>
+            <input type="radio" class="nes-radio" name="answer">
+            <span>No</span>
+          </label>
+        </div>
+        <div class="nes-field">
+          <button type="button" class="nes-btn is-warning remove">Remove</button>
+        </div>
+      </section>
+      <!--
+      //Sound Reaction
+      //Blink
+      //* Zones
+      //* Speed
+      //* Color (single)
+      //ColorCycle
+      //* Zones
+      //* Speed
+      //* Color (if blank, rainbow. if list, cycles list)
+      //Chase
+      //* Zones
+      //* Speed
+      //* Color (single)
+      //* Size (defaults to 2)
+      //* Spacing (defaults to 3)
+      //Comet
+      //* Zones
+      //* Speed
+      //* Color (single)
+      //* Bounce (defaults to false)
+      //Pulse
+      //* Zones
+      //* Speed
+      //* Color (single)
+      //* Period (defaults to 5)
+      //Pop (Sparkle)
+      //* Zones
+      //* Speed
+      //* Color (single)
+      //Unicorn Party 1 (Rainbow)
+      //Unicorn Party 2 (RainbowChase)
+      //Unicorn Party 3 (RainbowComet)
+      //Unicorn Party 4 (RainbowSparkle)
+      //
+      <div class="entry">
+        <h1>{{title}}</h1>
+        <div class="body">
+          {{body}}
+        </div>
+      </div>
+      -->
+      {% endraw %}
+    </script>
     <script>
-      document.addEventListener('click', function(event) {
-        if (event.target.className.indexOf('add-more') >= 0) {
-          document.getElementById('pattern-block').innerHTML += '<input type="text" name="patterns[1][2][3]" value="hi">'
+      let patternCount = 1
+      window.Handlebars.registerHelper('select', function( value, options ){
+        const $el = $('<select />').html( options.fn(this) )
+        $el.find('[value="' + value + '"]').attr({'selected':'selected'})
+        return $el.html()
+      })
+      const source = document.getElementById('entry-template').innerHTML
+      const template = Handlebars.compile(source)
+
+      $('.add-more').on('click', function(event) {
+        const context = { pattern: '', number: patternCount }
+        patternCount++
+        const html = template(context)
+
+        //document.getElementById('pattern-block').innerHTML += '<input type="text" name="patterns[1][2][3]" value="hi">'
+        document.getElementById('pattern-block').innerHTML += html
+        $('.pattern-type').each(function(){
+          $(this).trigger('change')
+        })
+      })
+      $(document).on('click', '.remove', function(event) {
+        $(this).parents('section').remove()
+      })
+
+      $(document).on('change', '.pattern-type', function(event) {
+        const pattern = $(this).val()
+        const $section = $(this).parents('section')
+        if (['blink', 'chase', 'comet', 'pulse', 'sparkle'].includes(pattern)) {
+          $section.find('.color').removeClass('hide')
+        } else {
+          $section.find('.color').addClass('hide')
+        }
+        if (['colorcycle'].includes(pattern)) {
+          $section.find('.colors').removeClass('hide')
+        } else {
+          $section.find('.colors').addClass('hide')
+        }
+        if (['comet'].includes(pattern)) {
+          $section.find('.bounce').removeClass('hide')
+        } else {
+          $section.find('.bounce').addClass('hide')
         }
       })
-    </script>
+      </script>
   </body>
  </html>
