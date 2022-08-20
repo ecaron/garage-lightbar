@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="theme-color" content="#212529"/>
+    <title>Light Bar Controller</title>
+    <link href="static/nes-core.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="container" style="padding:8px">
+      <h2>Light Bar Settings</h2>
+      <form style="max-width:480px" method="post">
+        <div class="nes-field" style="margin-bottom:2rem">
+          <label for="turn_on">Turn On At</label>
+          <input type="time" name="turn_on" id="turn_on" required class="nes-input" value="{{ timers['TurnOn'] }}">
+        </div>
+        <div class="nes-field" style="margin-bottom:2rem">
+          <label for="turn_off">Turn Off At</label>
+          <input type="time" name="turn_off" id="turn_off" required class="nes-input" value="{{ timers['TurnOff'] }}">
+        </div>
+        <div class="nes-field" style="margin-bottom:2rem">
+          <label for="auto_off">Auto-Off After Hours</label>
+          <input type="number" name="auto_off" id="auto_off" required class="nes-input" value="{{ timers['AutoOff'] }}">
+        </div>
+        <div class="nes-field" style="margin-bottom:2rem">
+          <button type="submit" class="nes-btn is-primary">Save</button>
+        </div>
+      </form>
+
+      <h2>Light Bar Buttons</h2>
+      <div style="display:flex; gap: 2rem; margin-bottom:2rem">
+        <a class="nes-btn is-success" href="/button/1" style="flex-grow: 1; flex-basis: 0">1<br>Next Preset</a>
+        <a class="nes-btn is-success" href="/button/2" style="flex-grow: 1; flex-basis: 0">2<br>Previous Preset</a>
+        <a class="nes-btn is-success" href="/button/3" style="flex-grow: 1; flex-basis: 0">3<br>Adjust Brightness</a>
+        <a class="nes-btn is-success" href="/button/4" style="flex-grow: 1; flex-basis: 0">4<br>Toggle On/Off</a>
+      </div>  
+
+      <h2>Light Bar Patterns</h2>
+      <form action="/patterns" style="max-width:480px" method="post">
+        <input type="hidden" name="count" id="pattern-count" value="{{patterns|length}}">
+        <div id="pattern-block">
+          {% for pattern in patterns %}
+            <div>{{pattern}}</div>
+          {% endfor %}
+        </div>
+        <div class="nes-field" style="margin-bottom:2rem">
+          <button type="button" class="nes-btn is-secondary add-more">Add More</button>
+          <button type="submit" class="nes-btn is-primary">Save</button>
+        </div>
+      </form>
+    </div>
+    <script>
+      document.addEventListener('click', function(event) {
+        if (event.target.className.indexOf('add-more') >= 0) {
+          document.getElementById('pattern-block').innerHTML += '<input type="text" name="patterns[1][2][3]" value="hi">'
+        }
+      })
+    </script>
+  </body>
+ </html>
