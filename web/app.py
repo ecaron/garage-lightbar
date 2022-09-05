@@ -1,8 +1,8 @@
 import os
-from flask import Flask, render_template, request, redirect, send_from_directory
 import configparser
 import json
-import adafruit_led_animation
+from controls import power, brightness,  cycle
+from flask import Flask, render_template, request, redirect, send_from_directory
 
 config = configparser.ConfigParser(strict=False, interpolation=None)
 settings_conf = os.getenv('SETTINGS_CONF')
@@ -14,8 +14,13 @@ app = Flask(__name__)
 
 @app.route('/button/<number>', methods=['GET'])
 def button(number):
-    print("Pressed number ", number)
-    return redirect("/", code=302)
+    if number == "4":
+        power()
+    elif number == "3":
+        brightness()
+    else:
+        cycle()
+    return '', 204
 
 @app.route('/favicon.ico')
 def favicon():
@@ -44,20 +49,26 @@ def index():
             return '', 204
         else:
             return redirect("/", code=302)
-    else:
-        if 'PATTERNS' in config:
-            patterns = json.loads(config['PATTERNS']['designs'])
-        else:
-            patterns = []
 
-        if 'TIMERS' in config:
-            timers = config['TIMERS']
-        else:
-            timers = {}
-            timers['TurnOn'] = '16:00'
-            timers['TurnOff'] = '22:00'
-            timers['AutoOff'] = '4'
-        return render_template('index.html', timers=timers, patterns=patterns)
+    if 'PATTERNS' in config:
+        patterns = json.loads(config['PATTERNS']['designs'])
+    else:
+        patterns = []
+
+    if 'TIMERS' in config:
+        timers = config['TIMERS']
+    else:
+        timers = {}
+        timers['TurnOn'] = '16:00'
+        timers['TurnOff'] = '22:00'
+        timers['AutoOff'] = '4'
+    return render_template('index.html', timers=timers, patterns=patterns)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    host = '127.0.0.1'
+    if os.getenv('HOST'):
+        host = os.getenv('HOST')
+    port = 8000
+    if os.getenv('PORT'):
+        port = os.getenv('PORT')
+    app.run(host=host,port=port,debug=True)

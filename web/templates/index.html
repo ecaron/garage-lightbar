@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,6 +21,14 @@
 
   <body>
     <div class="container" style="padding:8px">
+      <h2>Light Bar Buttons</h2>
+      <div style="display:flex; flex-wrap: wrap; gap: 2rem; margin-bottom:2rem">
+        <a class="nes-btn is-success bar-button" data-id="1" href="#" style="flex-grow: 1; flex-basis: 0">1<br>Next Preset</a>
+        <a class="nes-btn is-success bar-button" data-id="2" href="#" style="flex-grow: 1; flex-basis: 0">2<br>Previous Preset</a>
+        <a class="nes-btn is-success bar-button" data-id="3" href="#" style="flex-grow: 1; flex-basis: 0">3<br>Adjust Brightness</a>
+        <a class="nes-btn is-success bar-button" data-id="4" href="#" style="flex-grow: 1; flex-basis: 0">4<br>Toggle On/Off</a>
+      </div>  
+
       <h2>Light Bar Settings</h2>
       <form style="max-width:480px" method="post">
         <input type="hidden" name="method" value="timers">
@@ -40,14 +48,6 @@
           <button type="submit" class="nes-btn is-primary">Save</button>
         </div>
       </form>
-
-      <h2>Light Bar Buttons</h2>
-      <div style="display:flex; flex-wrap: wrap; gap: 2rem; margin-bottom:2rem">
-        <a class="nes-btn is-success" href="/button/1" style="flex-grow: 1; flex-basis: 0">1<br>Next Preset</a>
-        <a class="nes-btn is-success" href="/button/2" style="flex-grow: 1; flex-basis: 0">2<br>Previous Preset</a>
-        <a class="nes-btn is-success" href="/button/3" style="flex-grow: 1; flex-basis: 0">3<br>Adjust Brightness</a>
-        <a class="nes-btn is-success" href="/button/4" style="flex-grow: 1; flex-basis: 0">4<br>Toggle On/Off</a>
-      </div>  
 
       <h2>Light Bar Patterns</h2>
       <form id="patternForm" style="max-width:480px" method="post">
@@ -317,6 +317,19 @@
           alert( "Settings saved" )
         }).fail(function() {
           alert( "Failed to save" )
+        })
+      })
+
+      $('.bar-button').on('click', function(e){
+        const $this = $(this)
+        $this.prop('disabled', true)
+        e.preventDefault()
+        const jqxhr = $.get( '/button/' + $this.data('id')).done(function() {
+          $this.prop('disabled', false)
+          alert( 'Button pressed' )
+        }).fail(function() {
+          $this.prop('disabled', false)
+          alert( 'Something did not work' )
         })
       })
 
