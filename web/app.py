@@ -1,8 +1,10 @@
 import os
 import configparser
 import json
-from controls import power, brightness,  cycle
+import controls
+from multiprocessing import Process, Value, Lock
 from flask import Flask, render_template, request, redirect, send_from_directory
+from gpiozero import Button
 
 config = configparser.ConfigParser(strict=False, interpolation=None)
 settings_conf = os.getenv('SETTINGS_CONF')
@@ -12,14 +14,57 @@ config.read(settings_conf)
 
 app = Flask(__name__)
 
+class LightState(object):
+    def __init__(self):
+        self.patterns = Value('i', 0)
+        self.power_on = Value('i', 0)
+        self.patterns = Value('i', 0)
+        self.sequence_spot = Value('i', 0)
+        self.lock = Lock()
+
+    def toggle_power(self):
+        with self.lock:
+            if self.power_on.value == 0:
+                self.power_on.value = 1
+            else:
+                self.power_on.value = 0
+
+    def get_power(self):
+        with self.lock:
+            return self.power_on.value
+
+lightState = LightState()
+
+def adjust_brightness():
+    return 1
+
+def next_preset():
+    return 1
+def prev_preset():
+    return 1
+
+button1 = Button(16)
+button1.when_released = next_preset
+
+button2 = Button(20)
+button2.when_released = prev_preset
+
+button3 = Button(26)
+button3.when_pressed = adjust_brightness
+
+button4 = Button(12)
+button4.when_pressed = lightState.toggle_power
+
 @app.route('/button/<number>', methods=['GET'])
 def button(number):
-    if number == "4":
-        power()
-    elif number == "3":
-        brightness()
+    if number == '4':
+        lightState.toggle_power()
+    elif number == '3':
+        adjust_brightness()
+    elif number == '2':
+        next_preset()
     else:
-        cycle()
+        prev_preset()
     return '', 204
 
 @app.route('/favicon.ico')
@@ -71,4 +116,10 @@ if __name__ == '__main__':
     port = 8000
     if os.getenv('PORT'):
         port = os.getenv('PORT')
-    app.run(host=host,port=port,debug=True)
+    debug = False
+    if os.getenv('DEBUG'):
+        debug = os.getenv('DEBUG')
+    p = Process(target=controls.lights, args=(lightState,))
+    p.start()
+    app.run(host=host,port=port,debug=debug, use_reloader=False)
+    p.join()
