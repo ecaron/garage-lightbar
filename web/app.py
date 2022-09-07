@@ -3,8 +3,10 @@ import configparser
 import json
 if not os.getenv('SKIP_LIGHTS'):
     import controls
-from multiprocessing import Process, Value, Lock
+from multiprocessing import Process, Value, Lock, Array
 from flask import Flask, render_template, request, redirect, send_from_directory
+from threading import Timer
+import datetime
 
 if not os.getenv('SKIP_BUTTONS'):
     from gpiozero import Button
@@ -19,10 +21,8 @@ app = Flask(__name__)
 
 class LightState(object):
     def __init__(self):
-        self.patterns = Value('i', 0)
+        self.pattern = Array('c', b'hello world')
         self.power_on = Value('i', 0)
-        self.patterns = Value('i', 0)
-        self.sequence_spot = Value('i', 0)
         self.lock = Lock()
 
     def toggle_power(self):
@@ -35,6 +35,24 @@ class LightState(object):
     def get_power(self):
         with self.lock:
             return self.power_on.value
+
+    def set_pattern(self, pattern):
+        with self.lock:
+            self.pattern.value = pattern
+
+ranToday = False
+
+def dailyReset():
+    global ranToday
+    ranToday = False
+    tomorrow = datetime.datetime.combine(datetime.date.today() + datetime.timedelta(days=1), datetime.time(0))
+    now = datetime.datetime.now()
+    diff = tomorrow - now
+    print (diff.total_seconds())
+    newDayTimer = Timer(diff.total_seconds(), dailyReset)
+    newDayTimer.start()
+
+Timer(1.0, dailyReset).start()
 
 lightState = LightState()
 
