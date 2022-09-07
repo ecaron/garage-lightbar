@@ -37,10 +37,6 @@
           <input type="time" name="turn_on" id="turn_on" required class="nes-input" value="{{ timers['TurnOn'] }}">
         </div>
         <div class="nes-field">
-          <label for="turn_off">Turn Off At</label>
-          <input type="time" name="turn_off" id="turn_off" required class="nes-input" value="{{ timers['TurnOff'] }}">
-        </div>
-        <div class="nes-field">
           <label for="auto_off">Auto-Off After Hours</label>
           <input type="number" name="auto_off" id="auto_off" required class="nes-input" value="{{ timers['AutoOff'] }}">
         </div>
@@ -147,6 +143,9 @@
         </div>
         <div class="nes-field">
           <button type="button" class="nes-btn is-warning remove">Remove</button>
+          <button type="button" class="nes-btn move-up">▲</button>
+          <button type="button" class="nes-btn move-down">▼</button>
+          <button type="button" class="nes-btn run-now">Run</button>
         </div>
       </section>
       <!--
@@ -256,7 +255,45 @@
         addPattern({ pattern: '' })
       })
       $(document).on('click', '.remove', function(event) {
-        $(this).parents('section').remove()
+        if (confirm('Are you sure?')) {
+          $(this).parents('section').remove()
+        }
+      })
+
+      $(document).on('click', '.move-up', function(event) {
+        const $blockParent = $(this).parents('.nes-container')
+        const $prevBlock = $blockParent.prev()
+        if ($prevBlock.length) {
+          $prevBlock.insertAfter($blockParent)
+        }
+      })
+
+      $(document).on('click', '.move-down', function(event) {
+        const $blockParent = $(this).parents('.nes-container')
+        const $nextBlock = $blockParent.next()
+        if ($nextBlock.length) {
+          $blockParent.insertAfter($nextBlock)
+        }
+      })
+
+      $(document).on('click', '.run-now', function(event) {
+        const $this = $(this)
+        const $blockParent = $this.parents('.nes-container')
+        const $patternType = $blockParent.find('.pattern-type')
+        if (!$patternType.val()) {
+          alert('Pattern type is required')
+          $patternType.focus()
+          return
+        }
+        $this.prop('disabled', true)
+        const pattern = $blockParent.find('.item:not(.hide) input:not(.hide), :not(.hide) select:not(.hide)').serialize()
+        const jqxhr = $.post( '.', { method: "run-pattern", pattern: JSON.stringify(pattern)}).done(function() {
+          alert('Pattern is running')
+          $this.prop('disabled', false)
+        }).fail(function() {
+          alert('Pattern failed to run')
+          $this.prop('disabled', false)
+        })
       })
 
       $(document).on('click', '.remove-color', function(event) {

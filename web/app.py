@@ -1,10 +1,13 @@
 import os
 import configparser
 import json
-import controls
+if not os.getenv('SKIP_LIGHTS'):
+    import controls
 from multiprocessing import Process, Value, Lock
 from flask import Flask, render_template, request, redirect, send_from_directory
-from gpiozero import Button
+
+if not os.getenv('SKIP_BUTTONS'):
+    from gpiozero import Button
 
 config = configparser.ConfigParser(strict=False, interpolation=None)
 settings_conf = os.getenv('SETTINGS_CONF')
@@ -43,17 +46,18 @@ def next_preset():
 def prev_preset():
     return 1
 
-button1 = Button(16)
-button1.when_released = next_preset
+if not os.getenv('SKIP_BUTTONS'):
+    button1 = Button(16)
+    button1.when_released = next_preset
 
-button2 = Button(20)
-button2.when_released = prev_preset
+    button2 = Button(20)
+    button2.when_released = prev_preset
 
-button3 = Button(26)
-button3.when_pressed = adjust_brightness
+    button3 = Button(26)
+    button3.when_pressed = adjust_brightness
 
-button4 = Button(12)
-button4.when_pressed = lightState.toggle_power
+    button4 = Button(12)
+    button4.when_pressed = lightState.toggle_power
 
 @app.route('/button/<number>', methods=['GET'])
 def button(number):
@@ -75,6 +79,10 @@ def favicon():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+        if request.form['method'] == 'run-pattern':
+            print (request.form['pattern'])
+            return '', 204
+
         if request.form['method'] == 'save-patterns':
             if 'PATTERNS' not in config:
                 config['PATTERNS'] = {}
@@ -85,7 +93,6 @@ def index():
                 config['TIMERS'] = {}
 
             config['TIMERS']['TurnOn'] = request.form['turn_on']
-            config['TIMERS']['TurnOff'] = request.form['turn_off']
             config['TIMERS']['AutoOff'] = request.form['auto_off']
         with open(settings_conf, 'w') as configfile:
             config.write(configfile)
@@ -105,7 +112,6 @@ def index():
     else:
         timers = {}
         timers['TurnOn'] = '16:00'
-        timers['TurnOff'] = '22:00'
         timers['AutoOff'] = '4'
     return render_template('index.html', timers=timers, patterns=patterns)
 
@@ -119,7 +125,15 @@ if __name__ == '__main__':
     debug = False
     if os.getenv('DEBUG'):
         debug = os.getenv('DEBUG')
-    p = Process(target=controls.lights, args=(lightState,))
-    p.start()
-    app.run(host=host,port=port,debug=debug, use_reloader=False)
-    p.join()
+    reloader = False
+    if os.getenv('RELOADER'):
+        reloader = os.getenv('RELOADER')
+
+    if not os.getenv('SKIP_LIGHTS'):
+        p = Process(target=controls.lights, args=(lightState,))
+        p.start()
+
+    app.run(host=host,port=port,debug=debug, use_reloader=reloader)
+
+    if not os.getenv('SKIP_LIGHTS'):
+        p.join()
