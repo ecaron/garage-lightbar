@@ -27,7 +27,8 @@
         <a class="nes-btn is-success bar-button" data-id="2" href="#" style="flex-grow: 1; flex-basis: 0">2<br>Previous Preset</a>
         <a class="nes-btn is-success bar-button" data-id="3" href="#" style="flex-grow: 1; flex-basis: 0">3<br>Adjust Brightness</a>
         <a class="nes-btn is-success bar-button" data-id="4" href="#" style="flex-grow: 1; flex-basis: 0">4<br>Toggle On/Off</a>
-      </div>  
+      </div>
+      <p style="text-align:center">&nbsp;<span id="buttonNote" class="nes-text"></span></p>
 
       <h2>Light Bar Settings</h2>
       <form style="max-width:480px" method="post">
@@ -287,8 +288,9 @@
         }
         $this.prop('disabled', true)
         const pattern = $blockParent.find('.item:not(.hide) input:not(.hide), :not(.hide) select:not(.hide)').serialize()
-        const jqxhr = $.post( '.', { method: "run-pattern", pattern: pattern}).done(function() {
-          alert('Pattern is running')
+        const jqxhr = $.post( '.', { method: 'run-pattern', pattern: pattern}).done(function() {
+          $this.html('🏃').addClass('is-success')
+          setTimeout(function(){$this.html('Run').removeClass('is-success')},2000)
           $this.prop('disabled', false)
         }).fail(function() {
           alert('Pattern failed to run')
@@ -350,23 +352,32 @@
         $('#pattern-block section').each(function(){
           patterns.push($(this).find('.item:not(.hide) input:not(.hide), :not(.hide) select:not(.hide)').serialize())
         })
-        const jqxhr = $.post( '.', { method: "save-patterns", patterns: JSON.stringify(patterns)}).done(function() {
-          alert( "Settings saved" )
+        if (patterns.length === 0) {
+          alert('At least one pattern must be setup before saving.')
+          return
+        }
+        const jqxhr = $.post( '.', { method: 'save-patterns', patterns: JSON.stringify(patterns)}).done(function() {
+          alert( 'Settings saved' )
         }).fail(function() {
-          alert( "Failed to save" )
+          alert( 'Failed to save' )
         })
       })
 
+      const $buttonNote = $('#buttonNote')
+      let buttonTimer
       $('.bar-button').on('click', function(e){
         const $this = $(this)
         $this.prop('disabled', true)
         e.preventDefault()
         const jqxhr = $.get( '/button/' + $this.data('id')).done(function() {
           $this.prop('disabled', false)
-          alert( 'Button pressed' )
+          clearTimeout(buttonTimer)
+          $buttonNote.removeClass('is-error').addClass('is-success').html( 'Button pressed' ).fadeIn();
+          buttonTimer = setTimeout(function(){$buttonNote.fadeOut();},2000);
         }).fail(function() {
           $this.prop('disabled', false)
-          alert( 'Something did not work' )
+          $buttonNote.removeClass('is-success').addClass('is-error').html( 'Something did not work' ).fadeIn();
+          buttonTimer = setTimeout(function(){$buttonNote.fadeOut();},2000);
         })
       })
 
