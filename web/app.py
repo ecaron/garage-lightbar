@@ -17,14 +17,22 @@ if not SETTINGS_CONF:
     SETTINGS_CONF = "/tmp/settings.conf"
 CONFIG.read(SETTINGS_CONF)
 
-app = Flask(__name__)
+if "TIMERS" not in CONFIG:
+    CONFIG["PATTERNS"] = {}
+    CONFIG["PATTERNS"]["designs"] = "[]"
+    CONFIG["TIMERS"] = {}
+    CONFIG["TIMERS"]["TurnOn"] = "16:00"
+    CONFIG["TIMERS"]["AutoOff"] = "4"
+    with open(SETTINGS_CONF, mode="w", encoding="utf-8") as defaultfile:
+        CONFIG.write(defaultfile)
 
+app = Flask(__name__)
 
 class LightState():
     '''Controller of the light state settings'''
     def __init__(self):
         '''Initializes the shared memory'''
-        self.pattern = Array("c", b"hello world")
+        self.pattern = Array("c", bytearray(1024))
         self.brightness = Value("i", 0)
         self.power_on = Value("i", 0)
         self.lock = Lock()
@@ -58,7 +66,8 @@ class LightState():
     def set_pattern(self, pattern):
         '''Toggles the shared-memory pattern'''
         with self.lock:
-            self.pattern.value = pattern
+            self.pattern.value = bytes(pattern, 'utf-8')
+            print(pattern)
 
 
 PRESET_SPOT = 0
@@ -145,7 +154,7 @@ def prev_preset():
 
 def run_preset(preset):
     '''Sends a preset to the lightbar'''
-    print(preset)
+    LIGHT_STATE.set_pattern(preset)
 
 
 DAILY_TIMER = Timer(1.0, daily_reset)
@@ -195,7 +204,7 @@ def index():
     '''Serves & saves the web portal'''
     if request.method == "POST":
         if request.form["method"] == "run-pattern":
-            print(request.form["pattern"])
+            run_preset(request.form["pattern"])
             return "", 204
 
         if request.form["method"] == "save-patterns":
