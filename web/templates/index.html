@@ -101,12 +101,14 @@
           <div class="nes-select">
             <select required="" id="zones_{{number}}" name="zone">
               {{#select zone}}
-                <option value="all">All</option>
+                <option value="all">All at Once</option>
+                <option value="rwb-toggle" selected="">Red White Blue (3 Big Lights)</option>
                 <option value="white-all">White (All at Once)</option>
-                <option value="white-toggle">White (Left Right Alternate)</option>
-                <option value="rwb-toggle" selected="">Red White Blue (Alternate)</option>
-                <option value="rb-toggle" selected="">Red Blue (Alternate)</option>
+                <option value="white-toggle">White (2 Big Lights)</option>
+                <option value="white-unique">White (Individual LEDs)</option>
+                <option value="rb-toggle" selected="">Red Blue (2 Big Lights)</option>
                 <option value="rb-all" selected="">Red Blue (All at Once)</option>
+                <option value="rb-unique" selected="">Red Blue (Individual LEDs)</option>
               {{/select}}
             </select>
           </div>
