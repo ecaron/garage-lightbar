@@ -36,7 +36,7 @@ class LightState:
     def __init__(self):
         """Initializes the shared memory"""
         self.pattern = Array("c", bytearray(1024))
-        self.brightness = Value("i", 0)
+        self.brightness = Value("i", 100)
         self.power_on = Value("i", 0)
         self.lock = Lock()
 
@@ -56,10 +56,12 @@ class LightState:
     def adjust_brightness(self):
         """Toggles the shared-memory brightness"""
         with self.lock:
-            if self.brightness.value * 2 > 100:
-                self.brightness.value = 5
-            else:
-                self.brightness.value = self.brightness.value * 2
+            levels = [5, 10, 25, 50, 100]
+            for i in levels:
+                if self.brightness.value < i:
+                    self.brightness.value = i
+                    return
+            self.brightness.value = 5
 
     def get_brightness(self):
         """Gets the shared-memory brightness"""

@@ -11,8 +11,16 @@
     .nes-select, .nes-field {
       margin-bottom: 2rem;
     }
+    #pattern-block .nes-container {
+      padding: .7rem;
+    }
     .hide {
       display: none;
+    }
+    .options button.nes-btn {
+      width: 9rem;
+      display: inline-block;
+      margin-bottom: 10px;
     }
     </style>
     <script src="static/jquery.js"></script>
@@ -72,8 +80,10 @@
                 <option value="comet">Comet</option>
                 <option value="pulse">Pulse</option>
                 <option value="sparkle">Pop</option>
-                <option value="mic-1">Microphone Spectrum 1</option>
-                <option value="mic-2">Microphone Spectrum 2</option>
+<!--                <option value="mic-1">Microphone Spectrum 1</option>
+                <option value="mic-2">Microphone Spectrum 2</option> -->
+                <option value="red-blue">Red Blue Flashers</option>
+                <option value="red-white-blue">Red White Blue Flashers</option>
                 <option value="rainbow">Unicorn Party 1</option>
                 <option value="rainbowchase">Unicorn Party 2</option>
                 <option value="rainbowcomet">Unicorn Party 3</option>
@@ -101,14 +111,8 @@
           <div class="nes-select">
             <select required="" id="zones_{{number}}" name="zone">
               {{#select zone}}
-                <option value="all">All at Once</option>
-                <option value="rwb-toggle" selected="">Red White Blue (3 Big Lights)</option>
-                <option value="white-all">White (All at Once)</option>
-                <option value="white-toggle">White (2 Big Lights)</option>
-                <option value="white-unique">White (Individual LEDs)</option>
-                <option value="rb-toggle" selected="">Red Blue (2 Big Lights)</option>
-                <option value="rb-all" selected="">Red Blue (All at Once)</option>
-                <option value="rb-unique" selected="">Red Blue (Individual LEDs)</option>
+                <option value="all">All</option>
+                <option value="white">White Only</option>
               {{/select}}
             </select>
           </div>
@@ -144,11 +148,11 @@
             <span>No</span>
           </label>
         </div>
-        <div class="nes-field">
-          <button type="button" class="nes-btn is-warning remove">Remove</button>
-          <button type="button" class="nes-btn move-up">▲</button>
-          <button type="button" class="nes-btn move-down">▼</button>
-          <button type="button" class="nes-btn run-now">Run</button>
+        <div class="nes-field options">
+          <button type="button" class="nes-btn move-up">Move ▲</button>
+          <button type="button" class="nes-btn run-now is-success" style="float:right">Run</button><br>
+          <button type="button" class="nes-btn move-down">Move ▼</button>
+          <button type="button" class="nes-btn is-warning remove" style="float:right">Remove</button>
         </div>
       </section>
       <!--
@@ -291,8 +295,8 @@
         $this.prop('disabled', true)
         const pattern = $blockParent.find('.item:not(.hide) input:not(.hide), :not(.hide) select:not(.hide)').serialize()
         const jqxhr = $.post( '.', { method: 'run-pattern', pattern: pattern}).done(function() {
-          $this.html('🏃').addClass('is-success')
-          setTimeout(function(){$this.html('Run').removeClass('is-success')},2000)
+          $this.html('Running').addClass('is-primary').removeClass('is-success')
+          setTimeout(function(){$this.html('Run').removeClass('is-primary').addClass('is-success')},2000)
           $this.prop('disabled', false)
         }).fail(function() {
           alert('Pattern failed to run')
@@ -343,6 +347,9 @@
         }
         if (['mic-1', 'mic-2'].includes(pattern)) {
           $section.find('.zones, .speed').addClass('hide')
+        } else if (['red-blue', 'red-white-blue', 'rainbow', 'rainbowchase', 'rainbowcomet', 'rainbowsparkle'].includes(pattern)) {
+          $section.find('.speed').removeClass('hide')
+          $section.find('.zones').addClass('hide')
         } else {
           $section.find('.zones, .speed').removeClass('hide')
         }
