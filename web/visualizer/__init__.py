@@ -1,24 +1,31 @@
+"""Expose audio visualization methods to the NeoPixel animation library"""
+# pylint: disable=invalid-name
 from __future__ import print_function
 from __future__ import division
 import time
+import os
+import functools
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter1d
 from adafruit_led_animation.animation import Animation
+from adafruit_led_animation.color import BLACK
 from . import config
 from .microphone import Microphone
 from . import dsp
 
+class Visualizer(Animation): # pylint: disable=too-many-instance-attributes
+    """Visualizer class to be used by the Adafruit animation sequences"""
 
-class Visualizer(Animation):
     def __init__(self, pixel_object, method, name=None):
         """The previous time that the frames_per_second() function was called"""
+        super().__init__(pixel_object, speed=1, color=BLACK, name=name)
         self._time_prev = time.time() * 1000.0
         self.method = method
         self.pixels = pixel_object
         self.microphone = Microphone()
 
         """Gamma lookup table used for nonlinear brightness correction"""
-        self._gamma = np.load(config.GAMMA_TABLE_PATH)
+        self._gamma = np.load(os.path.join(os.path.dirname(__file__), "gamma_table.npy"))
 
         """Pixel values that were most recently displayed on the LED strip"""
         self._prev_pixels = np.tile(253, (3, len(pixel_object)))
@@ -72,10 +79,17 @@ class Visualizer(Animation):
         self.microphone.start()
 
     def disable(self):
+        """Pass the note to turn off the microphone listeners"""
         self.microphone.stop()
 
-    def animate(self):
-        self.audio_update(self.microphone.animate())
+    def draw(self):
+        """Not supported - animation should be called instead"""
+        raise NotImplementedError()
+
+    def animate(self, show=True):
+        """Grab the audio states & animate them"""
+        if show is True:
+            self.audio_update(self.microphone.animate())
 
     def frames_per_second(self):
         """Return the estimated frames per second
@@ -101,24 +115,7 @@ class Visualizer(Animation):
             return self._fps.value
         return self._fps.update(1000.0 / dt)
 
-    def memoize(function):
-        """Provides a decorator for memoizing functions"""
-        from functools import wraps
-
-        memo = {}
-
-        @wraps(function)
-        def wrapper(*args):
-            if args in memo:
-                return memo[args]
-            else:
-                rv = function(*args)
-                memo[args] = rv
-                return rv
-
-        return wrapper
-
-    @memoize
+    @functools.lru_cache
     def _normalized_linspace(self, size):
         return np.linspace(0, 1, size)
 
@@ -213,6 +210,7 @@ class Visualizer(Animation):
         return output
 
     def audio_update(self, audio_samples):
+        """Take the microphone feedback and visualize it"""
         if len(audio_samples) == 0:
             return
         # Normalize samples between 0 and 1
@@ -236,7 +234,7 @@ class Visualizer(Animation):
             y_padded = np.pad(y_data, (0, N_zeros), mode="constant")
             YS = np.abs(np.fft.rfft(y_padded)[: N // 2])
             # Construct a Mel filterbank from the FFT data
-            mel = np.atleast_2d(YS).T * dsp.mel_y.T
+            mel = np.atleast_2d(YS).T * dsp.MEL_Y.T
             # Scale data to values more suitable for visualization
             # mel = np.sum(mel, axis=0)
             mel = np.sum(mel, axis=0)
@@ -262,11 +260,7 @@ class Visualizer(Animation):
         # Truncate values and cast to integer
         self.raw_pixels = np.clip(self.raw_pixels, 0, 255).astype(int)
         # Optional gamma correction
-        p = (
-            self._gamma[self.raw_pixels]
-            if config.SOFTWARE_GAMMA_CORRECTION
-            else np.copy(self.raw_pixels)
-        )
+        p = self._gamma[self.raw_pixels]
         # Encode 24-bit LED values in 32 bit integers
         # r = np.left_shift(p[0][:].astype(int), 8)
         # g = np.left_shift(p[1][:].astype(int), 16)

@@ -30,7 +30,7 @@ Functions
 ---------
 """
 
-from numpy import abs, append, arange, insert, linspace, log10, round, zeros
+from numpy import abs, append, arange, insert, linspace, log10, round, zeros # pylint: disable=redefined-builtin, unused-import
 
 
 def hertz_to_mel(freq):
@@ -61,7 +61,7 @@ def mel_to_hertz(mel):
     return 700.0 * (10 ** (mel / 2595.0)) - 700.0
 
 
-def melfrequencies_mel_filterbank(num_bands, freq_min, freq_max, num_fft_bands):
+def melfrequencies_mel_filterbank(num_bands, freq_min, freq_max, num_fft_bands): # pylint: disable=unused-argument
     """Returns centerfrequencies and band edges for a mel filter bank
     Parameters
     ----------
@@ -90,7 +90,7 @@ def melfrequencies_mel_filterbank(num_bands, freq_min, freq_max, num_fft_bands):
     return center_frequencies_mel, lower_edges_mel, upper_edges_mel
 
 
-def compute_melmat(
+def compute_melmat( # pylint: disable=unused-argument, too-many-locals
     num_mel_bands=12, freq_min=64, freq_max=8000, num_fft_bands=513, sample_rate=16000
 ):
     """Returns tranformation matrix for mel spectrum.

@@ -1,3 +1,4 @@
+"""Make Alsa's text output less noisy"""
 import ctypes
 
 ERROR_HANDLER_FUNC = ctypes.CFUNCTYPE(
@@ -5,8 +6,9 @@ ERROR_HANDLER_FUNC = ctypes.CFUNCTYPE(
 )
 
 
-def py_error_handler(filename, line, function, err, fmt):
-    pass
+def py_error_handler(filename, line, function, err, fmt): # pylint: disable=unused-argument
+    """Capture the error handle, but don't do anything with it"""
+    pass # pylint: disable=unnecessary-pass
 
 
 c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
