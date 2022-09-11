@@ -2,6 +2,7 @@
 import time
 import board  # pylint: disable=import-error
 import neopixel  # pylint: disable=import-error
+from visualizer import Visualizer
 from urllib.parse import parse_qs  # pylint: disable=wrong-import-order
 from adafruit_led_animation.helper import PixelMap
 from adafruit_led_animation.animation.blink import Blink
@@ -35,6 +36,7 @@ def lights(light_state):  # pylint: disable=too-many-branches,too-many-statement
     prev_power = 0
     prev_brightness = 0
     prev_pattern = ""
+    mic_active = False
 
     pattern = Blink(white_map, speed=1.0, color=(0, 0, 0))
     while True:  # pylint: disable=too-many-nested-blocks
@@ -81,6 +83,10 @@ def lights(light_state):  # pylint: disable=too-many-branches,too-many-statement
                         int(hex_color[i : i + 2], 16) for i in (0, 2, 4)
                     )
 
+                if mic_active:
+                    pattern.disable()
+                    mic_active = False
+
                 # Zones: all, rwb-toggle, white-all, white-toggle, white-unique,
                 # rb-toggle, rb-all, rb-unique
                 if "zone" not in new_pattern:
@@ -120,6 +126,12 @@ def lights(light_state):  # pylint: disable=too-many-branches,too-many-statement
                     )
                 elif new_pattern["pattern"][0] == "blink":
                     pattern = Blink(new_map, speed=speed, color=tuple_color)
+                elif new_pattern["pattern"][0] == "mic-1":
+                    pattern = Visualizer(white_map, "scroll")
+                    mic_active = True
+                elif new_pattern["pattern"][0] == "mic-2":
+                    pattern = Visualizer(white_map, "energy")
+                    mic_active = True
                 elif new_pattern["pattern"][0] == "red-blue":
                     pattern = AnimationSequence(
                         AnimationGroup(
