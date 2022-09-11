@@ -3,9 +3,9 @@ from __future__ import print_function
 from __future__ import division
 import os
 
-DEVICE = 'pi'
+DEVICE = "pi"
 
-if DEVICE == 'pi':
+if DEVICE == "pi":
     LED_PIN = 18
     """GPIO pin connected to the LED strip pixels (must support PWM)"""
     LED_FREQ_HZ = 800000
@@ -28,7 +28,7 @@ DISPLAY_FPS = False
 N_PIXELS = 24
 """Number of pixels in the LED strip (must match ESP8266 firmware)"""
 
-GAMMA_TABLE_PATH = os.path.join(os.path.dirname(__file__), 'gamma_table.npy')
+GAMMA_TABLE_PATH = os.path.join(os.path.dirname(__file__), "gamma_table.npy")
 """Location of the gamma correction table"""
 
 # Worked with 4800 and 60
@@ -49,8 +49,8 @@ appear "sluggish" or out of sync with the audio being played if it is too low.
 The FPS should not exceed the maximum refresh rate of the LED strip, which
 depends on how long the LED strip is.
 """
-_max_led_FPS = int(((N_PIXELS * 30e-6) + 50e-6)**-1.0)
-assert FPS <= _max_led_FPS, 'FPS must be <= {}'.format(_max_led_FPS)
+_max_led_FPS = int(((N_PIXELS * 30e-6) + 50e-6) ** -1.0)
+assert FPS <= _max_led_FPS, "FPS must be <= {}".format(_max_led_FPS)
 
 MIN_FREQUENCY = 200
 """Frequencies below this value will be removed during audio processing"""
@@ -76,5 +76,5 @@ There is no point using more bins than there are pixels on the LED strip.
 N_ROLLING_HISTORY = 2
 """Number of past audio frames to include in the rolling window"""
 
-MIN_VOLUME_THRESHOLD = .005
+MIN_VOLUME_THRESHOLD = 0.005
 """No music visualization displayed if recorded audio volume below threshold"""

@@ -126,11 +126,14 @@ def lights(light_state):  # pylint: disable=too-many-branches,too-many-statement
                     )
                 elif new_pattern["pattern"][0] == "blink":
                     pattern = Blink(new_map, speed=speed, color=tuple_color)
-                elif new_pattern["pattern"][0] == "mic-1":
+                elif new_pattern["pattern"][0] == "sound-energy":
+                    pattern = Visualizer(white_map, "energy")
+                    mic_active = True
+                elif new_pattern["pattern"][0] == "sound-scroll":
                     pattern = Visualizer(white_map, "scroll")
                     mic_active = True
-                elif new_pattern["pattern"][0] == "mic-2":
-                    pattern = Visualizer(white_map, "energy")
+                elif new_pattern["pattern"][0] == "sound-spectrum":
+                    pattern = Visualizer(white_map, "spectrum")
                     mic_active = True
                 elif new_pattern["pattern"][0] == "red-blue":
                     pattern = AnimationSequence(

@@ -8,6 +8,7 @@ from . import config
 from .microphone import Microphone
 from . import dsp
 
+
 class Visualizer(Animation):
     def __init__(self, pixel_object, method, name=None):
         """The previous time that the frames_per_second() function was called"""
@@ -19,42 +20,55 @@ class Visualizer(Animation):
         """Gamma lookup table used for nonlinear brightness correction"""
         self._gamma = np.load(config.GAMMA_TABLE_PATH)
 
-
         """Pixel values that were most recently displayed on the LED strip"""
         self._prev_pixels = np.tile(253, (3, len(pixel_object)))
         self.raw_pixels = np.tile(1, (3, len(pixel_object)))
 
         """The low-pass filter used to estimate frames-per-second"""
         self._fps = dsp.ExpFilter(val=config.FPS, alpha_decay=0.2, alpha_rise=0.2)
-        self.r_filt = dsp.ExpFilter(np.tile(0.01, len(pixel_object) // 2),
-                       alpha_decay=0.2, alpha_rise=0.99)
-        self.g_filt = dsp.ExpFilter(np.tile(0.01, len(pixel_object) // 2),
-                       alpha_decay=0.05, alpha_rise=0.3)
-        self.b_filt = dsp.ExpFilter(np.tile(0.01, len(pixel_object) // 2),
-                       alpha_decay=0.1, alpha_rise=0.5)
-        self.common_mode = dsp.ExpFilter(np.tile(0.01, len(pixel_object) // 2),
-                       alpha_decay=0.99, alpha_rise=0.01)
-        self.p_filt = dsp.ExpFilter(np.tile(1, (3, len(pixel_object) // 2)),
-                       alpha_decay=0.1, alpha_rise=0.99)
+        self.r_filt = dsp.ExpFilter(
+            np.tile(0.01, len(pixel_object) // 2), alpha_decay=0.2, alpha_rise=0.99
+        )
+        self.g_filt = dsp.ExpFilter(
+            np.tile(0.01, len(pixel_object) // 2), alpha_decay=0.05, alpha_rise=0.3
+        )
+        self.b_filt = dsp.ExpFilter(
+            np.tile(0.01, len(pixel_object) // 2), alpha_decay=0.1, alpha_rise=0.5
+        )
+        self.common_mode = dsp.ExpFilter(
+            np.tile(0.01, len(pixel_object) // 2), alpha_decay=0.99, alpha_rise=0.01
+        )
+        self.p_filt = dsp.ExpFilter(
+            np.tile(1, (3, len(pixel_object) // 2)), alpha_decay=0.1, alpha_rise=0.99
+        )
         self.p = np.tile(1.0, (3, len(pixel_object) // 2))
-        self.gain = dsp.ExpFilter(np.tile(0.01, config.N_FFT_BINS),
-                     alpha_decay=0.001, alpha_rise=0.99)
+        self.gain = dsp.ExpFilter(
+            np.tile(0.01, config.N_FFT_BINS), alpha_decay=0.001, alpha_rise=0.99
+        )
         self._prev_spectrum = np.tile(0.01, len(pixel_object) // 2)
-        self.fft_plot_filter = dsp.ExpFilter(np.tile(1e-1, config.N_FFT_BINS),
-                         alpha_decay=0.5, alpha_rise=0.99)
-        self.mel_gain = dsp.ExpFilter(np.tile(1e-1, config.N_FFT_BINS),
-                         alpha_decay=0.01, alpha_rise=0.99)
-        self.mel_smoothing = dsp.ExpFilter(np.tile(1e-1, config.N_FFT_BINS),
-                         alpha_decay=0.5, alpha_rise=0.99)
-        self.volume = dsp.ExpFilter(config.MIN_VOLUME_THRESHOLD,
-                       alpha_decay=0.02, alpha_rise=0.02)
-        self.fft_window = np.hamming(int(config.MIC_RATE / config.FPS) * config.N_ROLLING_HISTORY)
+        self.fft_plot_filter = dsp.ExpFilter(
+            np.tile(1e-1, config.N_FFT_BINS), alpha_decay=0.5, alpha_rise=0.99
+        )
+        self.mel_gain = dsp.ExpFilter(
+            np.tile(1e-1, config.N_FFT_BINS), alpha_decay=0.01, alpha_rise=0.99
+        )
+        self.mel_smoothing = dsp.ExpFilter(
+            np.tile(1e-1, config.N_FFT_BINS), alpha_decay=0.5, alpha_rise=0.99
+        )
+        self.volume = dsp.ExpFilter(
+            config.MIN_VOLUME_THRESHOLD, alpha_decay=0.02, alpha_rise=0.02
+        )
+        self.fft_window = np.hamming(
+            int(config.MIC_RATE / config.FPS) * config.N_ROLLING_HISTORY
+        )
         self.prev_fps_update = time.time()
         # Number of audio samples to read every time frame
         self.samples_per_frame = int(config.MIC_RATE / config.FPS)
 
         # Array containing the rolling audio sample window
-        self.y_roll = np.random.rand(config.N_ROLLING_HISTORY, self.samples_per_frame) / 1e16
+        self.y_roll = (
+            np.random.rand(config.N_ROLLING_HISTORY, self.samples_per_frame) / 1e16
+        )
         self.microphone.start()
 
     def disable(self):
@@ -90,6 +104,7 @@ class Visualizer(Animation):
     def memoize(function):
         """Provides a decorator for memoizing functions"""
         from functools import wraps
+
         memo = {}
 
         @wraps(function)
@@ -100,13 +115,12 @@ class Visualizer(Animation):
                 rv = function(*args)
                 memo[args] = rv
                 return rv
-        return wrapper
 
+        return wrapper
 
     @memoize
     def _normalized_linspace(self, size):
         return np.linspace(0, 1, size)
-
 
     def interpolate(self, y, new_length):
         """Intelligently resizes the array by linearly interpolating the values
@@ -138,9 +152,9 @@ class Visualizer(Animation):
         self.gain.update(y)
         y /= self.gain.value
         y *= 255.0
-        r = int(np.max(y[:len(y) // 3]))
-        g = int(np.max(y[len(y) // 3: 2 * len(y) // 3]))
-        b = int(np.max(y[2 * len(y) // 3:]))
+        r = int(np.max(y[: len(y) // 3]))
+        g = int(np.max(y[len(y) // 3 : 2 * len(y) // 3]))
+        b = int(np.max(y[2 * len(y) // 3 :]))
         # Scrolling effect window
         self.p[:, 1:] = self.p[:, :-1]
         self.p *= 0.98
@@ -161,9 +175,9 @@ class Visualizer(Animation):
         y *= float((len(self.pixels) // 2) - 1)
         # Map color channels according to energy in the different freq bands
         scale = 0.9
-        r = int(np.mean(y[:len(y) // 3]**scale))
-        g = int(np.mean(y[len(y) // 3: 2 * len(y) // 3]**scale))
-        b = int(np.mean(y[2 * len(y) // 3:]**scale))
+        r = int(np.mean(y[: len(y) // 3] ** scale))
+        g = int(np.mean(y[len(y) // 3 : 2 * len(y) // 3] ** scale))
+        b = int(np.mean(y[2 * len(y) // 3 :] ** scale))
         # Assign color to different frequency regions
         self.p[0, :r] = 255.0
         self.p[0, r:] = 0.0
@@ -180,7 +194,6 @@ class Visualizer(Animation):
         # Set the new pixel value
         return np.concatenate((self.p[:, ::-1], self.p), axis=1)
 
-
     def visualize_spectrum(self, y):
         """Effect that maps the Mel filterbank frequencies onto the LED strip"""
         y = np.copy(self.interpolate(y, len(self.pixels) // 2))
@@ -195,10 +208,9 @@ class Visualizer(Animation):
         r = np.concatenate((r[::-1], r))
         g = np.concatenate((g[::-1], g))
         b = np.concatenate((b[::-1], b))
-        #output = np.array([r, g, b]) * 255
+        # output = np.array([r, g, b]) * 255
         output = np.array([g, r, b]) * 255
         return output
-
 
     def audio_update(self, audio_samples):
         if len(audio_samples) == 0:
@@ -212,17 +224,17 @@ class Visualizer(Animation):
 
         vol = np.max(np.abs(y_data))
         if vol < config.MIN_VOLUME_THRESHOLD:
-            print('No audio input. Volume below threshold. Volume:', vol)
-            self.pixels.fill((0,0,0))
+            # print('No audio input. Volume below threshold. Volume:', vol)
+            self.pixels.fill((0, 0, 0))
         else:
-            print('Audio input. Volume:', vol)
+            # print('Audio input. Volume:', vol)
             # Transform audio input into the frequency domain
             N = len(y_data)
-            N_zeros = 2**int(np.ceil(np.log2(N))) - N
+            N_zeros = 2 ** int(np.ceil(np.log2(N))) - N
             # Pad with zeros until the next power of two
             y_data *= self.fft_window
-            y_padded = np.pad(y_data, (0, N_zeros), mode='constant')
-            YS = np.abs(np.fft.rfft(y_padded)[:N // 2])
+            y_padded = np.pad(y_data, (0, N_zeros), mode="constant")
+            YS = np.abs(np.fft.rfft(y_padded)[: N // 2])
             # Construct a Mel filterbank from the FFT data
             mel = np.atleast_2d(YS).T * dsp.mel_y.T
             # Scale data to values more suitable for visualization
@@ -234,15 +246,12 @@ class Visualizer(Animation):
             mel /= self.mel_gain.value
             mel = self.mel_smoothing.update(mel)
             # Map filterbank output onto LED strip
-            output = self.visualize_energy(mel)
-            #if self.method == 'spectrum':
-            #    output = self.visualize_spectrum(mel)
-            #elif self.method == 'scroll':
-            #    output = self.visualize_scroll(mel)
-            #else:
-            #    output = self.visualize_energy(mel)
-
-            self.raw_pixels = output
+            if self.method == "spectrum":
+                self.raw_pixels = self.visualize_spectrum(mel)
+            elif self.method == "scroll":
+                self.raw_pixels = self.visualize_scroll(mel)
+            else:
+                self.raw_pixels = self.visualize_energy(mel)
             self.update()
 
     def update(self):
@@ -253,12 +262,16 @@ class Visualizer(Animation):
         # Truncate values and cast to integer
         self.raw_pixels = np.clip(self.raw_pixels, 0, 255).astype(int)
         # Optional gamma correction
-        p = self._gamma[self.raw_pixels] if config.SOFTWARE_GAMMA_CORRECTION else np.copy(self.raw_pixels)
+        p = (
+            self._gamma[self.raw_pixels]
+            if config.SOFTWARE_GAMMA_CORRECTION
+            else np.copy(self.raw_pixels)
+        )
         # Encode 24-bit LED values in 32 bit integers
-        #r = np.left_shift(p[0][:].astype(int), 8)
-        #g = np.left_shift(p[1][:].astype(int), 16)
-        #b = p[2][:].astype(int)
-        #rgb = np.bitwise_or(np.bitwise_or(r, g), b)
+        # r = np.left_shift(p[0][:].astype(int), 8)
+        # g = np.left_shift(p[1][:].astype(int), 16)
+        # b = p[2][:].astype(int)
+        # rgb = np.bitwise_or(np.bitwise_or(r, g), b)
         r = p[0][:].astype(int)
         g = p[1][:].astype(int)
         b = p[2][:].astype(int)
@@ -275,7 +288,8 @@ class Visualizer(Animation):
             if np.array_equal(p[:, i], self._prev_pixels[:, i]):
                 continue
 
-        self.pixels[offset + i] = (r[i], g[i], b[i])
-        #strip._led_data[i] = int(rgb[i])
+            self.pixels[offset + i] = (r[i], g[i], b[i])
+
+        # strip._led_data[i] = int(rgb[i])
         self._prev_pixels = np.copy(p)
         self.pixels.show()

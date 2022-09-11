@@ -98,10 +98,11 @@
                 <option value="comet">Comet</option>
                 <option value="pulse">Pulse</option>
                 <option value="sparkle">Pop</option>
-                <option value="mic-1">Microphone Spectrum 1</option>
-                <option value="mic-2">Microphone Spectrum 2</option>
                 <option value="red-blue">Red Blue Flashers</option>
                 <option value="red-white-blue">Red White Blue Flashers</option>
+                <option value="sound-energy">Sound - Energy</option>
+                <option value="sound-scroll">Sound - Scroll</option>
+                <option value="sound-spectrum">Sound - Spectrum</option>
                 <option value="rainbow">Unicorn Party 1</option>
                 <option value="rainbowchase">Unicorn Party 2</option>
                 <option value="rainbowcomet">Unicorn Party 3</option>
@@ -363,7 +364,7 @@
         } else {
           $section.find('.bounce').addClass('hide')
         }
-        if (['mic-1', 'mic-2'].includes(pattern)) {
+        if (['sound-scroll', 'sound-energy', 'sound-spectrum'].includes(pattern)) {
           $section.find('.zones, .speed').addClass('hide')
         } else if (['red-blue', 'red-white-blue', 'rainbow', 'rainbowchase', 'rainbowcomet', 'rainbowsparkle'].includes(pattern)) {
           $section.find('.speed').removeClass('hide')
