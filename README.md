@@ -16,12 +16,70 @@ This is a light-weight program that replaced the incandescent bulbs of an [older
 
 ## Screenshots & Examples
 
+### Light Modes In Action
+
+#### Blink
+![Lightbar Blinking](github-docs/blink.gif)
+
+#### Chase
+![Lightbar Chasing](github-docs/chase.gif)
+
+#### Color Cycle (with rainbow color defaults)
+![Lightbar Color Cycle](github-docs/colorcycle.gif)
+
+#### Comet
+![Lightbar Comet](github-docs/comet.gif)
+
+#### Pop
+![Lightbar Pop](github-docs/pop.gif)
+
+#### Pulse
+![Lightbar Pop](github-docs/pop.gif)
+
+#### Red Blue Flashers
+![Lightbar Right Blue](github-docs/red-blue.gif)
+
+#### Red White Blue Flashers
+![Lightbar Right White Blue](github-docs/red-white-blue.gif)
+
+#### Unicorn Party 1 - Rainbow
+![Lightbar Unicorn Party 1](github-docs/unicorn-party-1.gif)
+
+#### Unicorn Party 2 - Rainbow Chase
+![Lightbar Unicorn Party 2](github-docs/unicorn-party-2.gif)
+
+#### Unicorn Party 3 - Rainbow Comet
+![Lightbar Unicorn Party 3](github-docs/unicorn-party-3.gif)
+
+#### Unicorn Party 4 - Rainbow Sparkle
+![Lightbar Unicorn Party 4](github-docs/unicorn-party-4.gif)
+
+#### Sound Reactive - Energy
+![Lightbar Sound Energy](github-docs/sound-energy.gif)
+
+#### Sound Reactive - Scroll
+![Lightbar Sound Scroll](github-docs/sound-scroll.gif)
+
+#### Sound Reactive - Spectrum
+![Lightbar Sound Spectrum](github-docs/sound-spectrum.gif)
+
+
+## Web Interface
+
+![Top half of homescreen](github-docs/home-top.png)
+
+![Bottom half of homescreen](github-docs/home-bottom.png)
+
+
 ## Instructions
 
 Here's the crude version of the work that I did to make this work:
 1. I removed the wiring & lighting from the lightbar.
-2. ...
-
+2. Follow [Adafruit's Guide to NeoPixel on Raspberry Pi](https://learn.adafruit.com/neopixels-on-raspberry-pi/raspberry-pi-wiring) to attach a Raspberry Pi to an strip of 60 LEDs.
+3. Wire a [1x4 Keypad](https://www.adafruit.com/product/1332) to the bottom to allow physical button control. 
+4. Install the [USB Desktop Microphone](https://www.amazon.com/dp/B08CF2YP8M) to the Pi, and mount it to the bottom of the lightbar. 
+5. Disable all not-critical processes on the Pi, and setup a script to run `app.py` as a service.
+6. Enjoy a lightbar that brings people together!
 
 ## Hardware Used
 
@@ -36,5 +94,3 @@ Here's the crude version of the work that I did to make this work:
 * [Adafruit's Guide to NeoPixel on Raspberry Pi](https://learn.adafruit.com/neopixels-on-raspberry-pi/raspberry-pi-wiring)
 * [NES.css - Theme of the Web Interface](https://nostalgic-css.github.io/NES.css/)
 * [Scott Lawson's Amazing Audio Reactive LED Strip](https://github.com/scottlawsonbc/audio-reactive-led-strip)
-
-## TODO
