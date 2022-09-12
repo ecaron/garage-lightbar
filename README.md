@@ -16,52 +16,18 @@ This is a light-weight program that replaced the incandescent bulbs of an [older
 
 ## Screenshots & Examples
 
-### Light Modes In Action
+| Demo of | Lights In Action |
+| ----------------- | -------------------- |
+| <h4>Blink</h4> <img src="github-docs/blink.gif" width="100%"> | <h4>Chase</h4> <img src="github-docs/chase.gif" width="100%"> |
+| <h4>Color Cycle (rainbow color defaults)</h4> <img src="github-docs/colorcycle.gif" width="100%"> | <h4>Comet</h4> <img src="github-docs/comet.gif" width="100%"> |
+| <h4>Pop</h4> <img src="github-docs/pop.gif" width="100%"> | <h4>Pulse</h4> <img src="github-docs/pulse.gif" width="100%"> |
+| <h4>Red Blue Flashers</h4> <img src="github-docs/red-blue.gif" width="100%"> | <h4>Red White Blue Flashers</h4> <img src="github-docs/red-white-blue.gif" width="100%"> |
+| <h4>Unicorn Party 1 - Rainbow</h4> <img src="github-docs/unicorn-party-1.gif" width="100%"> | <h4>Unicorn Party 2 - Rainbow Chase</h4> <img src="github-docs/unicorn-party-2.gif" width="100%"> |
+| <h4>Unicorn Party 3 - Rainbow Comet</h4> <img src="github-docs/unicorn-party-3.gif" width="100%"> | <h4>Unicorn Party 4 - Rainbow Sparkle</h4> <img src="github-docs/unicorn-party-4.gif" width="100%"> |
 
-#### Blink
-![Lightbar Blinking](github-docs/blink.gif)
-
-#### Chase
-![Lightbar Chasing](github-docs/chase.gif)
-
-#### Color Cycle (with rainbow color defaults)
-![Lightbar Color Cycle](github-docs/colorcycle.gif)
-
-#### Comet
-![Lightbar Comet](github-docs/comet.gif)
-
-#### Pop
-![Lightbar Pop](github-docs/pop.gif)
-
-#### Pulse
-![Lightbar Pop](github-docs/pop.gif)
-
-#### Red Blue Flashers
-![Lightbar Right Blue](github-docs/red-blue.gif)
-
-#### Red White Blue Flashers
-![Lightbar Right White Blue](github-docs/red-white-blue.gif)
-
-#### Unicorn Party 1 - Rainbow
-![Lightbar Unicorn Party 1](github-docs/unicorn-party-1.gif)
-
-#### Unicorn Party 2 - Rainbow Chase
-![Lightbar Unicorn Party 2](github-docs/unicorn-party-2.gif)
-
-#### Unicorn Party 3 - Rainbow Comet
-![Lightbar Unicorn Party 3](github-docs/unicorn-party-3.gif)
-
-#### Unicorn Party 4 - Rainbow Sparkle
-![Lightbar Unicorn Party 4](github-docs/unicorn-party-4.gif)
-
-#### Sound Reactive - Energy
-![Lightbar Sound Energy](github-docs/sound-energy.gif)
-
-#### Sound Reactive - Scroll
-![Lightbar Sound Scroll](github-docs/sound-scroll.gif)
-
-#### Sound Reactive - Spectrum
-![Lightbar Sound Spectrum](github-docs/sound-spectrum.gif)
+| Light Based Examples | Powered by [Scott Lawson's library](https://github.com/scottlawsonbc/audio-reactive-led-strip) | You'll have to imagine the music playing because of GIFs... |
+| ---- | --- | --- |
+| ![Lightbar Sound Energy](github-docs/sound-energy.gif) | ![Lightbar Sound Scroll](github-docs/sound-scroll.gif) | ![Lightbar Sound Spectrum](github-docs/sound-spectrum.gif) |
 
 
 ## Web Interface
