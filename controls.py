@@ -2,7 +2,6 @@
 import time
 import board  # pylint: disable=import-error
 import neopixel  # pylint: disable=import-error
-from visualizer import Visualizer
 from urllib.parse import parse_qs  # pylint: disable=wrong-import-order
 from adafruit_led_animation.helper import PixelMap
 from adafruit_led_animation.animation.blink import Blink
@@ -18,8 +17,12 @@ from adafruit_led_animation.animation.rainbow import Rainbow
 from adafruit_led_animation.group import AnimationGroup
 from adafruit_led_animation.sequence import AnimationSequence
 from adafruit_led_animation import color
+from visualizer import Visualizer
 
-def lights(light_state):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+
+def lights(
+    light_state,
+):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
     """Animates, powers and alters the light state"""
     pixels = neopixel.NeoPixel(board.D18, 60, brightness=1.0, auto_write=False)
     blue_lights = [13, 14, 15, 16, 17, 18, 19, 20, 21]
@@ -117,7 +120,9 @@ def lights(light_state):  # pylint: disable=too-many-branches,too-many-statement
                     pattern = AnimationSequence(
                         AnimationGroup(
                             ColorCycle(red_map, speed, colors=[color.RED, color.BLACK]),
-                            ColorCycle(white_map, speed, colors=[color.BLACK, color.BLACK]),
+                            ColorCycle(
+                                white_map, speed, colors=[color.BLACK, color.BLACK]
+                            ),
                             ColorCycle(
                                 blue_map, speed, colors=[color.BLACK, color.BLUE]
                             ),
@@ -139,7 +144,9 @@ def lights(light_state):  # pylint: disable=too-many-branches,too-many-statement
                     pattern = AnimationSequence(
                         AnimationGroup(
                             ColorCycle(red_map, speed, colors=[color.RED, color.BLACK]),
-                            ColorCycle(white_map, speed, colors=[color.BLACK, color.BLACK]),
+                            ColorCycle(
+                                white_map, speed, colors=[color.BLACK, color.BLACK]
+                            ),
                             ColorCycle(
                                 blue_map, speed, colors=[color.BLACK, color.BLUE]
                             ),
@@ -198,8 +205,11 @@ def lights(light_state):  # pylint: disable=too-many-branches,too-many-statement
                     else:
                         pattern = ColorCycle(new_map, speed=speed)
                 elif new_pattern["pattern"][0] == "comet":
+                    bounce = True
+                    if "answer" in new_pattern and new_pattern["answer"][0] == "no":
+                        bounce = False
                     pattern = Comet(
-                        new_map, speed=speed / 8, color=tuple_color, bounce=True
+                        new_map, speed=speed / 8, color=tuple_color, bounce=bounce
                     )
                 elif new_pattern["pattern"][0] == "pulse":
                     pattern = Pulse(
