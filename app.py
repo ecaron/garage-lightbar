@@ -4,7 +4,8 @@ import configparser
 import json
 import datetime
 from multiprocessing import Process, Value, Lock, Array
-from threading import Timer
+import pytz
+from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, render_template, request, redirect, send_from_directory
 
 if not os.getenv("SKIP_LIGHTS"):
@@ -28,6 +29,8 @@ if "TIMERS" not in CONFIG:
         CONFIG.write(defaultfile)
 
 app = Flask(__name__)
+tz = pytz.timezone("US/Central")
+scheduler = BackgroundScheduler(timezone=tz)
 
 
 class LightState:
@@ -80,57 +83,47 @@ class LightState:
 
 
 PRESET_SPOT = 0
-DAILY_TIMER = False
-TURN_ON_TIMER = False
-TURN_OFF_TIMER = False
 
 
-def daily_reset():
-    """Every morning, schedules the time that the lightbar should turn on"""
-    global DAILY_TIMER, TURN_ON_TIMER  # pylint: disable=global-statement
+def toggle_power():
+    """If on, turn off. If off, turn on"""
+    if LIGHT_STATE.get_power() == 0:
+        turn_on()
+    else:
+        turn_off()
 
-    if DAILY_TIMER:
-        DAILY_TIMER.cancel()
 
-    time_tomorrow = datetime.datetime.combine(
-        datetime.date.today() + datetime.timedelta(days=1), datetime.time(0)
-    )
-    time_now = datetime.datetime.now()
-    time_diff = time_tomorrow - time_now
-
-    DAILY_TIMER = Timer(time_diff.total_seconds(), daily_reset)
-    DAILY_TIMER.start()
-
-    if CONFIG["TIMERS"] and CONFIG["TIMERS"]["TurnOn"]:
-        turn_on_time = datetime.datetime.strptime(
-            CONFIG["TIMERS"]["TurnOn"], "%H:%M"
-        ).time()
-        turn_on_date_time = datetime.datetime.combine(
-            datetime.date.today(), turn_on_time
-        )
-        if TURN_ON_TIMER:
-            TURN_ON_TIMER.cancel()
-        TURN_ON_TIMER = Timer((turn_on_date_time - time_now).total_seconds(), turn_on)
-        TURN_ON_TIMER.start()
+def auto_on():
+    """If light isn't already on, revert to first preset & turn on"""
+    global PRESET_SPOT  # pylint: disable=global-statement
+    if LIGHT_STATE.get_power() == 0:
+        PRESET_SPOT = -1
+        turn_on()
 
 
 def turn_on():
     """Turns the lightbar on"""
-    global TURN_OFF_TIMER  # pylint: disable=global-statement
+    global PRESET_SPOT  # pylint: disable=global-statement
     if LIGHT_STATE.get_power() == 0:
         LIGHT_STATE.toggle_power()
-    if TURN_OFF_TIMER:
-        TURN_OFF_TIMER.cancel()
-    time_now = datetime.datetime.now()
-    turn_off_time = datetime.datetime.now() + datetime.timedelta(
+        PRESET_SPOT = -1
+        next_preset()
+
+
+def set_auto_off():
+    """Whenever there's activity with the let, move out the auto-off job"""
+    if scheduler.get_job("auto_off"):
+        scheduler.remove_job("auto_off")
+    off_time = datetime.datetime.now(tz) + datetime.timedelta(
         hours=int(CONFIG["TIMERS"]["AutoOff"])
     )
-    TURN_OFF_TIMER = Timer((turn_off_time - time_now).total_seconds(), turn_off)
-    TURN_OFF_TIMER.start()
+    scheduler.add_job(turn_off, "date", run_date=off_time)
 
 
 def turn_off():
     """Turns the lightbar off"""
+    if scheduler.get_job("auto_off"):
+        scheduler.remove_job("auto_off")
     if LIGHT_STATE.get_power() == 1:
         LIGHT_STATE.toggle_power()
 
@@ -173,10 +166,9 @@ def run_preset(preset):
     if LIGHT_STATE.get_power() == 0:
         LIGHT_STATE.toggle_power()
     LIGHT_STATE.set_pattern(preset)
+    set_auto_off()
 
 
-DAILY_TIMER = Timer(1.0, daily_reset)
-DAILY_TIMER.start()
 LIGHT_STATE = LightState()
 
 if not os.getenv("SKIP_BUTTONS"):
@@ -190,14 +182,14 @@ if not os.getenv("SKIP_BUTTONS"):
     button3.when_pressed = adjust_brightness
 
     button4 = Button(12)
-    button4.when_pressed = LIGHT_STATE.toggle_power
+    button4.when_pressed = toggle_power
 
 
 @app.route("/button/<number>", methods=["GET"])
 def button(number):
     """Handles when the virtual buttons are pushed"""
     if number == "4":
-        LIGHT_STATE.toggle_power()
+        toggle_power()
     elif number == "3":
         adjust_brightness()
     elif number == "2":
@@ -234,8 +226,21 @@ def index():
             if "TIMERS" not in CONFIG:
                 CONFIG["TIMERS"] = {}
 
+            if (
+                CONFIG["TIMERS"]["TurnOn"] != request.form["turn_on"]
+                or CONFIG["TIMERS"]["AutoOff"] != request.form["auto_off"]
+            ):
+                time_parts = request.form["turn_on"].split(":")
+                scheduler.reschedule_job(
+                    "daily_run",
+                    trigger="cron",
+                    hour=time_parts[0],
+                    minute=time_parts[1],
+                )
+
             CONFIG["TIMERS"]["TurnOn"] = request.form["turn_on"]
             CONFIG["TIMERS"]["AutoOff"] = request.form["auto_off"]
+
         with open(SETTINGS_CONF, mode="w", encoding="utf-8") as configfile:
             CONFIG.write(configfile)
 
@@ -274,6 +279,17 @@ if __name__ == "__main__":
     if not os.getenv("SKIP_LIGHTS"):
         p = Process(target=controls.lights, args=(LIGHT_STATE,))
         p.start()
+
+    if not app.debug:
+        launch_time_parts = CONFIG["TIMERS"]["TurnOn"].split(":")
+        scheduler.add_job(
+            turn_on,
+            "cron",
+            hour=launch_time_parts[0],
+            minute=launch_time_parts[1],
+            id="daily_run",
+        )
+        scheduler.start()
 
     app.run(host=HOST, port=PORT, debug=DEBUG, use_reloader=RELOADER)
 
