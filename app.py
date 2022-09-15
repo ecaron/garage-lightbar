@@ -232,7 +232,8 @@ def index():# pylint: disable=too-many-branches
                 or CONFIG["TIMERS"]["AutoOff"] != request.form["auto_off"]
             ):
                 if request.form["turn_on"] == "":
-                    scheduler.remove_job("daily_run")
+                    if scheduler.get_job("daily_run"):
+                        scheduler.remove_job("daily_run")
                 else:
                     time_parts = request.form["turn_on"].split(":")
                     scheduler.reschedule_job(
@@ -243,7 +244,8 @@ def index():# pylint: disable=too-many-branches
                     )
 
                 if request.form["auto_off"] == "":
-                    scheduler.remove_job("auto_off")
+                    if scheduler.get_job("auto_off"):
+                        scheduler.remove_job("auto_off")
 
                 CONFIG["TIMERS"]["TurnOn"] = request.form["turn_on"]
                 CONFIG["TIMERS"]["AutoOff"] = request.form["auto_off"]
