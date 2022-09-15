@@ -23,8 +23,8 @@ if "TIMERS" not in CONFIG:
     CONFIG["PATTERNS"] = {}
     CONFIG["PATTERNS"]["designs"] = "[]"
     CONFIG["TIMERS"] = {}
-    CONFIG["TIMERS"]["TurnOn"] = "16:00"
-    CONFIG["TIMERS"]["AutoOff"] = "4"
+    CONFIG["TIMERS"]["TurnOn"] = ""
+    CONFIG["TIMERS"]["AutoOff"] = ""
     with open(SETTINGS_CONF, mode="w", encoding="utf-8") as defaultfile:
         CONFIG.write(defaultfile)
 
@@ -114,10 +114,11 @@ def set_auto_off():
     """Whenever there's activity with the let, move out the auto-off job"""
     if scheduler.get_job("auto_off"):
         scheduler.remove_job("auto_off")
-    off_time = datetime.datetime.now(tz) + datetime.timedelta(
-        hours=int(CONFIG["TIMERS"]["AutoOff"])
-    )
-    scheduler.add_job(turn_off, "date", run_date=off_time)
+    if CONFIG["TIMERS"]["AutoOff"] != "":
+        off_time = datetime.datetime.now(tz) + datetime.timedelta(
+            hours=int(CONFIG["TIMERS"]["AutoOff"])
+        )
+        scheduler.add_job(turn_off, "date", run_date=off_time)
 
 
 def turn_off():
@@ -230,16 +231,22 @@ def index():
                 CONFIG["TIMERS"]["TurnOn"] != request.form["turn_on"]
                 or CONFIG["TIMERS"]["AutoOff"] != request.form["auto_off"]
             ):
-                time_parts = request.form["turn_on"].split(":")
-                scheduler.reschedule_job(
-                    "daily_run",
-                    trigger="cron",
-                    hour=time_parts[0],
-                    minute=time_parts[1],
-                )
+                if request.form["turn_on"] == "":
+                    scheduler.remove_job("daily_run")
+                else:
+                    time_parts = request.form["turn_on"].split(":")
+                    scheduler.reschedule_job(
+                        "daily_run",
+                        trigger="cron",
+                        hour=time_parts[0],
+                        minute=time_parts[1],
+                    )
 
-            CONFIG["TIMERS"]["TurnOn"] = request.form["turn_on"]
-            CONFIG["TIMERS"]["AutoOff"] = request.form["auto_off"]
+                if request.form["auto_off"] == "":
+                    scheduler.remove_job("auto_off")
+
+                CONFIG["TIMERS"]["TurnOn"] = request.form["turn_on"]
+                CONFIG["TIMERS"]["AutoOff"] = request.form["auto_off"]
 
         with open(SETTINGS_CONF, mode="w", encoding="utf-8") as configfile:
             CONFIG.write(configfile)
@@ -257,8 +264,8 @@ def index():
         timers = CONFIG["TIMERS"]
     else:
         timers = {}
-        timers["TurnOn"] = "16:00"
-        timers["AutoOff"] = "4"
+        timers["TurnOn"] = ""
+        timers["AutoOff"] = ""
     return render_template("index.html", timers=timers, patterns=patterns)
 
 
@@ -281,14 +288,15 @@ if __name__ == "__main__":
         p.start()
 
     if not app.debug:
-        launch_time_parts = CONFIG["TIMERS"]["TurnOn"].split(":")
-        scheduler.add_job(
-            turn_on,
-            "cron",
-            hour=launch_time_parts[0],
-            minute=launch_time_parts[1],
-            id="daily_run",
-        )
+        if CONFIG["TIMERS"]["TurnOn"] != "":
+            launch_time_parts = CONFIG["TIMERS"]["TurnOn"].split(":")
+            scheduler.add_job(
+                turn_on,
+                "cron",
+                hour=launch_time_parts[0],
+                minute=launch_time_parts[1],
+                id="daily_run",
+            )
         scheduler.start()
 
     app.run(host=HOST, port=PORT, debug=DEBUG, use_reloader=RELOADER)
