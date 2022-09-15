@@ -211,7 +211,7 @@ def favicon():
 
 
 @app.route("/", methods=["GET", "POST"])
-def index():
+def index():# pylint: disable=too-many-branches
     """Serves & saves the web portal"""
     if request.method == "POST":
         if request.form["method"] == "run-pattern":
