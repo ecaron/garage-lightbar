@@ -268,8 +268,8 @@ def index():# pylint: disable=too-many-branches,too-many-statements
                         scheduler.add_job(
                             turn_on,
                             "cron",
-                            hour=launch_time_parts[0],
-                            minute=launch_time_parts[1],
+                            hour=time_parts[0],
+                            minute=time_parts[1],
                             id="daily_run",
                         )
 
@@ -289,8 +289,8 @@ def index():# pylint: disable=too-many-branches,too-many-statements
                         scheduler.add_job(
                             turn_off,
                             "cron",
-                            hour=launch_time_parts[0],
-                            minute=launch_time_parts[1],
+                            hour=time_parts[0],
+                            minute=time_parts[1],
                             id="daily_off",
                         )
 
