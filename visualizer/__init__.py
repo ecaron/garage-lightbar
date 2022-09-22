@@ -16,13 +16,14 @@ from . import dsp
 class Visualizer(Animation): # pylint: disable=too-many-instance-attributes
     """Visualizer class to be used by the Adafruit animation sequences"""
 
-    def __init__(self, pixel_object, method, name=None):
+    def __init__(self, pixel_object, method, min_volume, name=None):
         """The previous time that the frames_per_second() function was called"""
         super().__init__(pixel_object, speed=1, color=BLACK, name=name)
         self._time_prev = time.time() * 1000.0
         self.method = method
         self.pixels = pixel_object
         self.microphone = Microphone()
+        self.min_volume = min_volume / 10000
 
         """Gamma lookup table used for nonlinear brightness correction"""
         self._gamma = np.load(os.path.join(os.path.dirname(__file__), "gamma_table.npy"))
@@ -63,7 +64,7 @@ class Visualizer(Animation): # pylint: disable=too-many-instance-attributes
             np.tile(1e-1, config.N_FFT_BINS), alpha_decay=0.5, alpha_rise=0.99
         )
         self.volume = dsp.ExpFilter(
-            config.MIN_VOLUME_THRESHOLD, alpha_decay=0.02, alpha_rise=0.02
+            self.min_volume, alpha_decay=0.02, alpha_rise=0.02
         )
         self.fft_window = np.hamming(
             int(config.MIC_RATE / config.FPS) * config.N_ROLLING_HISTORY
@@ -205,7 +206,6 @@ class Visualizer(Animation): # pylint: disable=too-many-instance-attributes
         r = np.concatenate((r[::-1], r))
         g = np.concatenate((g[::-1], g))
         b = np.concatenate((b[::-1], b))
-        # output = np.array([r, g, b]) * 255
         output = np.array([g, r, b]) * 255
         return output
 
@@ -221,7 +221,7 @@ class Visualizer(Animation): # pylint: disable=too-many-instance-attributes
         y_data = np.concatenate(self.y_roll, axis=0).astype(np.float32)
 
         vol = np.max(np.abs(y_data))
-        if vol < config.MIN_VOLUME_THRESHOLD:
+        if vol < self.min_volume:
             # print('No audio input. Volume below threshold. Volume:', vol)
             self.pixels.fill((0, 0, 0))
         else:
@@ -271,18 +271,13 @@ class Visualizer(Animation): # pylint: disable=too-many-instance-attributes
         b = p[2][:].astype(int)
 
         # Update the pixels
-        for i in range(len(self.pixels)):
+        for i in range(len(self.pixels)): # pylint: disable=consider-using-enumerate
 
-            if i < 12:
-                offset = 21
-            else:
-                offset = 24
-            offset = 0
             # Ignore pixels if they haven't changed (saves bandwidth)
             if np.array_equal(p[:, i], self._prev_pixels[:, i]):
                 continue
 
-            self.pixels[offset + i] = (r[i], g[i], b[i])
+            self.pixels[i] = (r[i], g[i], b[i])
 
         # strip._led_data[i] = int(rgb[i])
         self._prev_pixels = np.copy(p)

@@ -132,13 +132,13 @@ def lights(
                 elif new_pattern["pattern"][0] == "blink":
                     pattern = Blink(new_map, speed=speed, color=tuple_color)
                 elif new_pattern["pattern"][0] == "sound-energy":
-                    pattern = Visualizer(white_map, "energy")
+                    pattern = Visualizer(white_map, "energy", light_state.get_mic())
                     mic_active = True
                 elif new_pattern["pattern"][0] == "sound-scroll":
-                    pattern = Visualizer(white_map, "scroll")
+                    pattern = Visualizer(white_map, "scroll", light_state.get_mic())
                     mic_active = True
                 elif new_pattern["pattern"][0] == "sound-spectrum":
-                    pattern = Visualizer(white_map, "spectrum")
+                    pattern = Visualizer(white_map, "spectrum", light_state.get_mic())
                     mic_active = True
                 elif new_pattern["pattern"][0] == "red-blue":
                     pattern = AnimationSequence(

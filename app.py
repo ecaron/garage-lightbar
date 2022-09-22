@@ -23,7 +23,9 @@ if "TIMERS" not in CONFIG:
     CONFIG["PATTERNS"] = {}
     CONFIG["PATTERNS"]["designs"] = "[]"
     CONFIG["TIMERS"] = {}
+    CONFIG["TIMERS"]["MicLevel"] = "5"
     CONFIG["TIMERS"]["TurnOn"] = ""
+    CONFIG["TIMERS"]["TurnOff"] = ""
     CONFIG["TIMERS"]["AutoOff"] = ""
     with open(SETTINGS_CONF, mode="w", encoding="utf-8") as defaultfile:
         CONFIG.write(defaultfile)
@@ -39,6 +41,7 @@ class LightState:
     def __init__(self):
         """Initializes the shared memory"""
         self.pattern = Array("c", bytearray(1024))
+        self.mic_level = Value("i", int(CONFIG["TIMERS"]["MicLevel"]))
         self.brightness = Value("i", 100)
         self.power_on = Value("i", 0)
         self.lock = Lock()
@@ -55,6 +58,16 @@ class LightState:
         """Get the shared-memory power state"""
         with self.lock:
             return self.power_on.value
+
+    def get_mic(self):
+        """Gets the shared-memory mic level"""
+        with self.lock:
+            return self.mic_level.value
+
+    def set_mic(self, level):
+        """Sets the shared-memory mic level"""
+        with self.lock:
+            self.mic_level.value = int(level)
 
     def adjust_brightness(self):
         """Toggles the shared-memory brightness"""
@@ -211,7 +224,7 @@ def favicon():
 
 
 @app.route("/", methods=["GET", "POST"])
-def index():# pylint: disable=too-many-branches
+def index():# pylint: disable=too-many-branches,too-many-statements
     """Serves & saves the web portal"""
     if request.method == "POST":
         if request.form["method"] == "run-pattern":
@@ -227,8 +240,16 @@ def index():# pylint: disable=too-many-branches
             if "TIMERS" not in CONFIG:
                 CONFIG["TIMERS"] = {}
 
+            if CONFIG["TIMERS"]["MicLevel"] != request.form["mic_level"]:
+                LIGHT_STATE.set_mic(request.form["mic_level"])
+                CONFIG["TIMERS"]["MicLevel"] = request.form["mic_level"]
+                if LIGHT_STATE.get_power() == 1:
+                    turn_off()
+                    turn_on()
+
             if (
                 CONFIG["TIMERS"]["TurnOn"] != request.form["turn_on"]
+                or CONFIG["TIMERS"]["TurnOff"] != request.form["turn_off"]
                 or CONFIG["TIMERS"]["AutoOff"] != request.form["auto_off"]
             ):
                 if request.form["turn_on"] == "":
@@ -236,19 +257,51 @@ def index():# pylint: disable=too-many-branches
                         scheduler.remove_job("daily_run")
                 else:
                     time_parts = request.form["turn_on"].split(":")
-                    scheduler.reschedule_job(
-                        "daily_run",
-                        trigger="cron",
-                        hour=time_parts[0],
-                        minute=time_parts[1],
-                    )
+                    if scheduler.get_job("daily_run"):
+                        scheduler.reschedule_job(
+                            "daily_run",
+                            trigger="cron",
+                            hour=time_parts[0],
+                            minute=time_parts[1],
+                        )
+                    else:
+                        scheduler.add_job(
+                            turn_on,
+                            "cron",
+                            hour=launch_time_parts[0],
+                            minute=launch_time_parts[1],
+                            id="daily_run",
+                        )
+
+                if request.form["turn_off"] == "":
+                    if scheduler.get_job("daily_off"):
+                        scheduler.remove_job("daily_off")
+                else:
+                    time_parts = request.form["turn_off"].split(":")
+                    if scheduler.get_job("daily_off"):
+                        scheduler.reschedule_job(
+                            "daily_off",
+                            trigger="cron",
+                            hour=time_parts[0],
+                            minute=time_parts[1],
+                        )
+                    else:
+                        scheduler.add_job(
+                            turn_off,
+                            "cron",
+                            hour=launch_time_parts[0],
+                            minute=launch_time_parts[1],
+                            id="daily_off",
+                        )
 
                 if request.form["auto_off"] == "":
                     if scheduler.get_job("auto_off"):
                         scheduler.remove_job("auto_off")
 
                 CONFIG["TIMERS"]["TurnOn"] = request.form["turn_on"]
+                CONFIG["TIMERS"]["TurnOff"] = request.form["turn_off"]
                 CONFIG["TIMERS"]["AutoOff"] = request.form["auto_off"]
+
 
         with open(SETTINGS_CONF, mode="w", encoding="utf-8") as configfile:
             CONFIG.write(configfile)
@@ -298,6 +351,15 @@ if __name__ == "__main__":
                 hour=launch_time_parts[0],
                 minute=launch_time_parts[1],
                 id="daily_run",
+            )
+        if CONFIG["TIMERS"]["TurnOff"] != "":
+            launch_time_parts = CONFIG["TIMERS"]["TurnOff"].split(":")
+            scheduler.add_job(
+                turn_off,
+                "cron",
+                hour=launch_time_parts[0],
+                minute=launch_time_parts[1],
+                id="daily_off",
             )
         scheduler.start()
 

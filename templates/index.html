@@ -57,15 +57,23 @@
       <p style="text-align:center">&nbsp;<span id="buttonNote" class="nes-text"></span></p>
 
       <h2>Light Bar Settings</h2>
-      <form style="max-width:480px" method="post">
+      <form style="max-width:480px" method="post" id="settingsForm">
         <input type="hidden" name="method" value="timers">
         <div class="nes-field">
           <label for="turn_on">Turn On At</label>
           <input type="time" name="turn_on" id="turn_on" class="nes-input" value="{{ timers['TurnOn'] }}">
         </div>
         <div class="nes-field">
+          <label for="turn_off">Turn Off At</label>
+          <input type="time" name="turn_off" id="turn_off" class="nes-input" value="{{ timers['TurnOff'] }}">
+        </div>
+        <div class="nes-field">
           <label for="auto_off">Auto-Off After Hours</label>
           <input type="number" name="auto_off" id="auto_off" class="nes-input" value="{{ timers['AutoOff'] }}">
+        </div>
+        <div class="nes-field">
+          <label for="mic_level">Mic Sensitivity</label>
+          <input type="number" name="mic_level" required id="mic_level" class="nes-input" value="{{ timers['MicLevel'] }}">
         </div>
         <div class="nes-field">
           <button type="submit" class="nes-btn is-primary">Save</button>
@@ -371,6 +379,14 @@
           $section.find('.zones').addClass('hide')
         } else {
           $section.find('.zones, .speed').removeClass('hide')
+        }
+      })
+
+      $('#settingsForm').on('submit', function(e){
+        if ($('#turn_off').val() && $('#auto_off').val()) {
+          alert('Turn Off and Auto Off cannot both be set. You must pick one or the other.')
+          e.preventDefault()
+          return
         }
       })
 
