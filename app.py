@@ -227,6 +227,11 @@ def favicon():
 def index():# pylint: disable=too-many-branches,too-many-statements
     """Serves & saves the web portal"""
     if request.method == "POST":
+        if request.form["method"] == "power":
+            os.system("systemctl poweroff")
+            run_preset(request.form["pattern"])
+            return "Powering Down", 200
+
         if request.form["method"] == "run-pattern":
             run_preset(request.form["pattern"])
             return "", 204
