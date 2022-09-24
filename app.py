@@ -2,6 +2,7 @@
 import os
 import configparser
 import json
+import time
 import datetime
 from multiprocessing import Process, Value, Lock, Array
 import pytz
@@ -108,9 +109,7 @@ def toggle_power():
 
 def auto_on():
     """If light isn't already on, revert to first preset & turn on"""
-    global PRESET_SPOT  # pylint: disable=global-statement
     if LIGHT_STATE.get_power() == 0:
-        PRESET_SPOT = -1
         turn_on()
 
 
@@ -182,22 +181,23 @@ def run_preset(preset):
     LIGHT_STATE.set_pattern(preset)
     set_auto_off()
 
+LAST_PRESS = time.time()
+def button_delay(option):
+    """Double-check that the button wasn't accidentally over-clicked"""
+    global LAST_PRESS # pylint: disable=global-statement
+    if time.time() - LAST_PRESS > 1:
+        LAST_PRESS = time.time()
+        if option == "toggle_power":
+            toggle_power()
+        elif option == "adjust_brightness":
+            adjust_brightness()
+        elif option == "prev_preset":
+            prev_preset()
+        elif option == "next_preset":
+            next_preset()
+
 
 LIGHT_STATE = LightState()
-
-if not os.getenv("SKIP_BUTTONS"):
-    button1 = Button(16)
-    button1.when_released = next_preset
-
-    button2 = Button(20)
-    button2.when_released = prev_preset
-
-    button3 = Button(26)
-    button3.when_pressed = adjust_brightness
-
-    button4 = Button(12)
-    button4.when_pressed = toggle_power
-
 
 @app.route("/button/<number>", methods=["GET"])
 def button(number):
@@ -342,6 +342,19 @@ if __name__ == "__main__":
     RELOADER = False
     if os.getenv("RELOADER"):
         RELOADER = os.getenv("RELOADER")
+
+    if not os.getenv("SKIP_BUTTONS"):
+        button1 = Button(16)
+        button1.when_released = lambda: button_delay("next_preset")
+
+        button2 = Button(20)
+        button2.when_released = lambda: button_delay("prev_preset")
+
+        button3 = Button(26)
+        button3.when_pressed = lambda: button_delay("adjust_brightness")
+
+        button4 = Button(12)
+        button4.when_pressed = lambda: button_delay("toggle_power")
 
     if not os.getenv("SKIP_LIGHTS"):
         p = Process(target=controls.lights, args=(LIGHT_STATE,))
